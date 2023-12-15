@@ -6,6 +6,7 @@ using System;
 
 public class RollerRacer : Simulator
 {
+    LinAlgEq matrix;    //so we can solve the matrix
     // physical parameters, names are the same as that in the notes
     double m;   // mass of vehicle
     double Ig;  // moment of inertia (vertical axis) about center of mass
@@ -54,6 +55,7 @@ public class RollerRacer : Simulator
 
     private void RHSFuncRRacer(double[] xx, double t, double[] ff)
     {
+        matrix = new LinAlgEq(5);//5 equations for 5 unknowns
         // give names to some state variable so code is easier to read & write
         double xDot = xx[1];
         double zDot = xx[3];
@@ -72,19 +74,61 @@ public class RollerRacer : Simulator
 
         // #### You will do some hefty calculations here
 
-        // #### Right sides are zero for now. You will fix
-        ff[0] = 0.0;
-        ff[1] = 0.0;
-        ff[2] = 0.0;
-        ff[3] = 0.0;
-        ff[4] = 0.0;
-        ff[5] = 0.0;
-        ff[6] = 0.0;
-        ff[7] = 0.0;
-        ff[8] = 0.0;
-        ff[9] = deltaDot;
-        ff[10] = -kDDelta*deltaDot -kPDelta*(delta - deltaDes);
+        //set first row of matrix:eq1
+        matrix.A[0][0] = - m;//x
+        matrix.A[0][1] = 0.0;//z
+        matrix.A[0][2] = 0.0;//psi
+        matrix.A[0][3] = sinPsi;//Fb
+        matrix.A[0][4] = sinPsiPlusDelta;//Ff
+        matrix.b[0] = 0;//remaining
 
+        //set second row of matrix:eq2
+        matrix.A[1][0] = 0;//x
+        matrix.A[1][1] = - m;//z
+        matrix.A[1][2] = 0;//psi
+        matrix.A[1][3] = cosPsi;//Fb
+        matrix.A[1][4] = cosPsiPlusDelta;//Ff
+        matrix.b[1] = 0;//remaining
+
+        //set third row of matrix:eq3
+        matrix.A[2][0] = 0;//x
+        matrix.A[2][1] = 0;//z
+        matrix.A[2][2] = - Ig;//psi
+        matrix.A[2][3] = b;//Fb
+        matrix.A[2][4] = - h * cosDelta - d;//Ff
+        matrix.b[2] = 0;//remaining
+
+        //set fourth row of matrix:eq7
+        matrix.A[3][0] = sinPsi;//x
+        matrix.A[3][1] = cosPsi;//z
+        matrix.A[3][2] = b;//psi
+        matrix.A[3][3] = 0;//Fb
+        matrix.A[3][4] = 0;//Ff
+        matrix.b[3] = - xDot*psiDot*cosPsi + zDot*psiDot*sinPsi;//remaining
+
+        //set fifth row of matrix:eq10
+        matrix.A[4][0] = sinPsiPlusDelta;//x
+        matrix.A[4][1] = cosPsiPlusDelta;//z
+        matrix.A[4][2] = - h * cosPsi;//psi
+        matrix.A[4][3] = 0;//Fb
+        matrix.A[4][4] = 0;//Ff
+        double deltaDDot = -kDDelta*deltaDot -kPDelta*(delta - deltaDes);
+        matrix.b[4] = - (psiDot + deltaDDot)*d - xDot*(psiDot + deltaDot)*cosPsiPlusDelta + zDot*(psiDot + deltaDot)*sinPsiPlusDelta;//remaining
+
+        matrix.SolveGauss();//solve the matrix
+
+        // apply solutions to the simulation
+        ff[0] = xDot;// x coordinate of center of mass
+        ff[1] = matrix.sol[0];// time derivative of x
+        ff[2] = zDot;// z coordinate of center of mass
+        ff[3] = matrix.sol[1];// time derivative of z
+        ff[4] = psiDot;// heading angle
+        ff[5] = matrix.sol[2];// yaw rate
+        ff[6] = -(xDot*cosPsi - zDot*sinPsi - c*psiDot) / rW;// rotation angle of left rear wheel
+        ff[7] = -(xDot*cosPsi - zDot*sinPsi + c*psiDot) / rW;// rotation angle of right rear wheel
+        ff[8] = -(xDot*cosPsiPlusDelta - zDot*sinPsiPlusDelta + h*psiDot*sinDelta) / rWs;// rotation angle of front steered wheel
+        ff[9] = deltaDot;// steer angle
+        ff[10] = deltaDDot;// steer rate
         simBegun = true;
     }
 
@@ -211,8 +255,8 @@ public class RollerRacer : Simulator
     {
         get{
             // ######## You have to write this part ################
-
-            return(-1.21212121);
+            double Speed = Math.Sqrt(Math.Pow(x[1],2) + Math.Pow(x[3],2));
+            return(Speed);//velocity x + velocity z
         }
     }
 
@@ -220,8 +264,9 @@ public class RollerRacer : Simulator
     {
         get{
             // ######## You have to write this part ################
-
-            return(-1.21212121);
+            double Speed = Math.Sqrt(Math.Pow(x[1],2) + Math.Pow(x[3],2));
+            double kE = Math.Pow(Speed,2) * m * 0.5;
+            return(kE);
         }
     }
 

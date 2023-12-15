@@ -10,7 +10,7 @@ public class Simulator
     protected double[] xi;     // array of intermediate states
     protected double[][] f;    // 2d array that holds values of rhs
 
-    protected double g;                  // gravitational field strength
+    protected double g;        // gravitational field strength
     protected int subStep;     // which substep of integrator current
 
     private Action<double[], double, double[]> rhsFunc;
@@ -80,11 +80,33 @@ public class Simulator
     //--------------------------------------------------------------------
     public void Step(double time, double dTime)
     {
-        //int i;
+        int i;
 
-        // It's your job to write the rest of this.
+        rhsFunc(x, time, f[0]);
+
+        for (i = 0; i < n; ++i){
+            xi[i] = x[i] + 0.5 * f[0][i] * dTime;
+        }
+
+        rhsFunc(xi, time + 0.5 * dTime, f[1]);
+
+        for (i = 0; i < n; ++i){
+            xi[i] = x[i] + 0.5 * f[1][i] * dTime;
+        }
+
+        rhsFunc(xi, time + 0.5 * dTime, f[2]);
+
+        for (i = 0; i < n; ++i)
+        {
+            xi[i] = x[i] + f[2][i] * dTime;
+        }
+
+        rhsFunc(xi, time + dTime, f[3]);
+
+        for (i = 0; i < n; ++i){
+            x[i] = x[i] + (1.0 / 6.0) * (f[0][i] + 2.0 * f[1][i] + 2.0 * f[2][i] + f[3][i]) * dTime;
+        }
     }
-
     //--------------------------------------------------------------------
     // SetRHSFunc: Receives function from derived class to calculate 
     //             rhs of ODE.

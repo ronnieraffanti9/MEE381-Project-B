@@ -71,15 +71,24 @@ public class LinAlgEq
         }
 
         // perform Gauss elimination
-        // ######## YOU MUST WRITE YOUR GAUSS ELIMINATION CODE HERE
-        // ######## FIRST, GET IT WORKING WITHOUT PIVOTING
-        // ########     ONCE YOU GET IT WORKING WITHOUT PIVOTING, 
-        // ########     THEN YOU CAN IMPLEMENT PIVOTING WITH ONE 
-        // ########     WELL-PLACED CALL TO THE pivotRow METHOD BELOW.
-        
+        for (i = 0; i < (n - 1); ++i) {// loop through rows
+            PivotRow(i); // move largest number into pivot element 
+            for (j = i + 1; j < n; ++j) {// loop through rows below the pivot row
+                double multiple = M[j][i] / M[i][i];// Calculate the multaple for row elimination
+                for (k = i; k <= n; ++k) {//loop through values in row
+                    M[j][k] = M[j][k] - multiple * M[i][k];//calculate new value
+                }
+            }
+        }
 
         // perform back substitution
-        // ######## YOU MUST WRITE YOUR BACK SUBSTITUTION CODE HERE
+        for(i = n - 1; i >= 0; --i){// loop through the matrix starting from the bottom
+            double multaple = M[i][n];// rightmost value in row (b matrix)
+            for(j = n - 1; j > i; --j){//loops through values right of pivot
+                multaple = multaple - M[i][j] * _x[j];//subtract known variables
+            }
+            _x[i] = multaple/M[i][i];//calculate the solution for the current row
+        }
     }
 
     //--------------------------------------------------------------------
