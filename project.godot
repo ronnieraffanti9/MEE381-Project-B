@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Project 381b"
+config/name="Project B godot"
 run/main_scene="res://RacerScene.tscn"
 config/features=PackedStringArray("4.1", "C#", "Forward Plus")
 config/icon="res://icon.svg"
