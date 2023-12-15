@@ -270,21 +270,42 @@ public class RollerRacer : Simulator
         }
     }
 
-    public double SlipRateFront
-    {
-        get{
-            // ######## You have to write this part ################
-
-            return(-1.21212121);
-        }
-    }
-
     public double SlipRateRear
     {
         get{
-            // ######## You have to write this part ################
+            double xDot = x[1];
+            double zDot = x[3];
+            double psi  = x[4];
+            double psiDot = x[5];
+            double delta = x[9];
+            double deltaDot = x[10];
 
-            return(-1.21212121);
+            double cosDelta = Math.Cos(delta);
+            double cosPsiPlusDelta = Math.Cos(psi + delta);
+            double sinPsiPlusDelta = Math.Sin(psi + delta);
+            
+            double slipRate = xDot*sinPsiPlusDelta + zDot*cosPsiPlusDelta - h*psiDot*cosDelta + (psiDot+deltaDot)*d;
+
+            return(slipRate);
+        }
+    }
+
+    public double SlipRateFront
+    {
+        get{
+            double xDot = x[1];
+            double zDot = x[3];
+            double psi  = x[4];
+            double psiDot = x[5];
+            double delta = x[9];
+
+            double cosPsi = Math.Cos(psi);
+            double sinPsi = Math.Sin(psi);
+
+            double slipRate = (xDot*cosPsi - zDot*sinPsi + c*psiDot) +
+            (xDot*sinPsi + zDot*cosPsi + b*psiDot);
+
+            return(slipRate);
         }
     }
 
